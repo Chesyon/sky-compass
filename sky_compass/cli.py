@@ -1,9 +1,9 @@
-# Copyright 2025 Chesyon, under the MIT license
+# Copyright 2025-2026 Chesyon, under the MIT license
 # The 'frontend' for sky-compass.
 
+import argparse
 from section_selection import section_for_offset, Issue
 from mapper import Region
-from sys import argv as args
 
 
 def region_from_str(string: str) -> Region | None:
@@ -14,8 +14,6 @@ def region_from_str(string: str) -> Region | None:
             return Region.eu
         case "jp":
             return Region.jp
-        case "us":
-            return Region.na
         case _:
             return None
 
@@ -29,32 +27,19 @@ def region_name(region: Region) -> str:
         case Region.jp:
             return "JP"
 
-
-if __name__ == "__main__":
-    if len(args) < 3:
-        print("Please provide a region, an offset, and optionally a section.")
-        exit(1)
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        prog="sky-compass",
+        description="CLI util to convert RAM addresses between releases of PMD:EoS using pmdsky-debug symbols."
+    )
+    parser.add_argument("region", choices=['na', 'eu', 'jp'], type=lambda reg: "na" if reg.lower() == "us" else reg.lower(), help="Source region of address")
+    parser.add_argument("address", type=lambda addr: int(addr, 16), help="Address to be converted")
+    parser.add_argument("section", type=lambda sec: sec.lower().replace("overlay", "ov"), required=False, help="What overlay/section the address is in. If blank, sky-compass will try to figure it out on its own.") # TODO: add choices
+    args = parser.parse_args()
     # Region
-    region = region_from_str(args[1])
-    if not region:
-        print("Region wasn't recognized. Valid options: na, eu, jp")
-        exit(1)
-    # Offset
-    try:
-        offset_str = args[2].lower()
-        if offset_str.startswith("0x"):
-            offset = int(offset_str[2:], 16)
-        else:
-            offset = int(offset_str)
-    except ValueError as e:
-        print("Couldn't parse offset. Error:")
-        print(e)
-        exit(1)
+    region = region_from_str(args.region)
     # Section
-    if len(args) == 3:  # No provided section
-        sections, section_issues = section_for_offset(offset, region, None)
-    else:
-        sections, section_issues = section_for_offset(offset, region, args[3])
+    sections, section_issues = section_for_offset(args.address, region, args.section)
     is_ov36 = False
     for issue in section_issues:
         match issue:
@@ -87,13 +72,16 @@ if __name__ == "__main__":
     if not is_ov36:
         section = sections[0]
         section_name = str(section)
-        na_offset, eu_offset, jp_offset = section.map_offset(offset, region)
+        na_offset, eu_offset, jp_offset = section.map_offset(args.offset, region)
     else:
         section_name = "overlay36"
-        na_offset = hex(offset)
-        eu_offset = hex(offset)
-        jp_offset = hex(offset)
+        na_offset = hex(args.offset)
+        eu_offset = na_offset
+        jp_offset = na_offset
     # Display output offsets.
     print(
-        f"{hex(offset)} [{region_name(region)}] in {section_name}:\nNA: {na_offset}\nEU: {eu_offset}\nJP: {jp_offset}"
+        f"{hex(args.offset)} [{region_name(region)}] in {section_name}:\nNA: {na_offset}\nEU: {eu_offset}\nJP: {jp_offset}"
     )
+
+if __name__ == "__main__":
+    main()
