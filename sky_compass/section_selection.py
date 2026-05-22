@@ -131,7 +131,7 @@ def section_for_offset(offset: int, region: Region, name: str | None) -> tuple[l
                         return [Itcm], issues
                     else:
                         issues.append(Issue.VERIFICATION_FAILED)
-                case "moveeffects": # TODO: move_effects is weird because it's the only one that has an underscore in its name, while everything else doesn't. make sure the discrepancy between the name here and in mapper.py won't cause problems.
+                case "moveeffects":
                     if verify_offset(offset, region, MoveEffects):
                         return [MoveEffects], issues
                     else:
