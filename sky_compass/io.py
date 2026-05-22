@@ -50,7 +50,6 @@ def deserialized_io(raw, skip_verification : bool = False):
     output.update({"response": "Section error"}) # A section issue prevents mapping from continuing. (This is normal; an expected use of sky-compass is just to check the section of an address.)
     return output
   # We're good to map!
-  # TODO: Move handling of is_ov36 into GlobalSection.map_offset; there's really no reason the IO/CLI needs to handle this itself. I've already added the param here, but it needs to be added to mapper.py.
-  na_result, eu_result, jp_result = sections[0].map_offset(address, region, Issue.IS_OV36 in issues)
+  na_result, eu_result, jp_result = sections[0].map_offset(address, region)
   output.update({"response": "Success", "outputs": {"na": mapping_result_to_dict(na_result), "eu": mapping_result_to_dict(eu_result), "jp": mapping_result(jp_result)}})
   return output
