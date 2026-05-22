@@ -1,4 +1,4 @@
-# Copyright 2025 Chesyon, under the MIT license
+# Copyright 2025-2026 Chesyon, under the MIT license
 # This file handles retrieving the relevant GlobalSection class for an offset.
 # If your usage of sky-compass only concerns a few sections (for example, if you KNOW all offsets you're going to be handling are for the script engine), you may wish to write an alternative to this file to save redundant checks.
 
@@ -46,6 +46,7 @@ from mapper import (
     Overlay33,
     Overlay34,
     Overlay35,
+    Overlay36,
 )
 from re import compile
 from enum import Enum
@@ -87,16 +88,14 @@ overlays = [
     Overlay33,
     Overlay34,
     Overlay35,
+    Overlay36,
 ]
 sections = [Arm7, Arm9] + overlays
-OV36_START = 0x23A7080
-OV36_END = OV36_START + 0x38F80
 
 Issue = Enum(
     "Issue",
     [
         "VERIFICATION_FAILED",  # Offset was not in the specified location.
-        "IS_OV36",  # Offset is in overlay36.
         "INVALID_SECTION",  # Specified section does not exist.
         "FINDING_AUTOMATICALLY",  # Finding section automatically.
         "NO_VALID_SECTIONS",  # This offset doesn't fall within any valid section.
@@ -108,14 +107,7 @@ Issue = Enum(
 def section_for_offset(offset: int, region: Region, name: str | None) -> tuple[list[GlobalSection] | None, list[Enum]]:
     issues: list[Enum] = []
     if name:
-        name = name.lower().replace("overlay", "ov").replace("_", "")  # Cleanup name
-    if OV36_START <= offset <= OV36_END:
-        if name and name != "ov36":
-            issues.append(Issue.VERIFICATION_FAILED)
-        issues.append(Issue.IS_OV36)
-        return None, issues
-    if name:
-        p = compile("ov([0-3]?[0-9])$")
+        p = compile("ov([0-3]?[0-9])$") # TODO: this can probably be moved outside of the function. we don't need to be compiling this every time, do we?
         m = p.match(name)
         if not m:  # NOT an overlay
             match name:
@@ -139,7 +131,7 @@ def section_for_offset(offset: int, region: Region, name: str | None) -> tuple[l
                         return [Itcm], issues
                     else:
                         issues.append(Issue.VERIFICATION_FAILED)
-                case "moveeffects":
+                case "moveeffects": # TODO: move_effects is weird because it's the only one that has an underscore in its name, while everything else doesn't. make sure the discrepancy between the name here and in mapper.py won't cause problems.
                     if verify_offset(offset, region, MoveEffects):
                         return [MoveEffects], issues
                     else:
@@ -148,9 +140,7 @@ def section_for_offset(offset: int, region: Region, name: str | None) -> tuple[l
                     issues.append(Issue.INVALID_SECTION)
         else:
             overlay_num = int(m.group(1))
-            if overlay_num == 36:  # We already know it definitely ISN'T ov36, since we checked for that at the start.
-                issues.append(Issue.VERIFICATION_FAILED)
-            elif overlay_num > 36:
+            if overlay_num > 36:
                 issues.append(Issue.INVALID_SECTION)
             else:  # User described an overlay that exists. Is the offset in it?
                 overlay = overlays[overlay_num]
