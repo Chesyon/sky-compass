@@ -34,19 +34,16 @@ def main() -> None:
     )
     parser.add_argument("region", choices=['na', 'eu', 'jp'], type=lambda reg: "na" if reg.lower() == "us" else reg.lower(), help="Source region of address")
     parser.add_argument("address", type=lambda addr: int(addr, 16), help="Address to be converted")
-    parser.add_argument("section", type=lambda sec: sec.lower().replace("overlay", "ov"), required=False, help="What overlay/section the address is in. If blank, sky-compass will try to figure it out on its own.") # TODO: add choices
+    parser.add_argument("section", type=lambda sec: sec.lower().replace("overlay", "ov").replace("_",""), required=False, help="What overlay/section the address is in. If blank, sky-compass will try to figure it out on its own.") # TODO: add choices
     args = parser.parse_args()
     # Region
     region = region_from_str(args.region)
     # Section
     sections, section_issues = section_for_offset(args.address, region, args.section)
-    is_ov36 = False
     for issue in section_issues:
         match issue:
             case Issue.VERIFICATION_FAILED:
                 print("Offset isn't in the provided section.")
-            case Issue.IS_OV36:
-                is_ov36 = True
             case Issue.INVALID_SECTION:
                 print("Provided section does not exist.")
             case Issue.FINDING_AUTOMATICALLY:
@@ -69,18 +66,11 @@ def main() -> None:
                 print("Please retry, providing the desired section.")
                 exit(1)
     # Map
-    if not is_ov36:
-        section = sections[0]
-        section_name = str(section)
-        na_offset, eu_offset, jp_offset = section.map_offset(args.offset, region)
-    else:
-        section_name = "overlay36"
-        na_offset = hex(args.offset)
-        eu_offset = na_offset
-        jp_offset = na_offset
+    section = sections[0]
+    na_offset, eu_offset, jp_offset = section.map_offset(args.offset, region)
     # Display output offsets.
     print(
-        f"{hex(args.offset)} [{region_name(region)}] in {section_name}:\nNA: {na_offset}\nEU: {eu_offset}\nJP: {jp_offset}"
+        f"{hex(args.offset)} [{region_name(region)}] in {section.cli_str()}:\nNA: {na_offset}\nEU: {eu_offset}\nJP: {jp_offset}"
     )
 
 if __name__ == "__main__":
