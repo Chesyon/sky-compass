@@ -1,4 +1,4 @@
-# Copyright 2025 Chesyon, under the MIT license
+# Copyright 2025-2026 Chesyon, under the MIT license
 # This file defines all the various RAM sections that are defined in pmdsky-debug, and provides the functions needed to map an offset within a section.
 
 from pmdsky_debug_py.protocol import Symbol
@@ -236,7 +236,7 @@ Overlay29 = GlobalSection(
     "ov29", RegionSection(na.overlay29), RegionSection(eu.overlay29), RegionSection(jp.overlay29)
 )
 MoveEffects = GlobalSection(
-    "move_effects",
+    "moveeffects",
     RegionSection(na.move_effects),
     RegionSection(eu.move_effects),
     RegionSection(jp.move_effects),
