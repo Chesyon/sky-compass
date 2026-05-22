@@ -9,16 +9,16 @@ Region = Enum("Region", ["na", "eu", "jp"])
 
 
 class MappingResult:
-    def __init__(self, succeeded: bool, result: int | None, min: None | int = None, max: None | int = None):
+    def __init__(self, result: int | None, min: None | int = None, max: None | int = None):
         self.result = result
         self.min = min
         self.max = max
 
     def __str__(self):
-        if self.result: # if self.result is not None
+        if self.result:  # if self.result is not None
             return hex(self.result)
         else:
-            if not self.min: # if self.min is None
+            if not self.min:  # if self.min is None
                 if not self.max:
                     return "Both nearest symbols were missing for this region, so no information can be given"
                 return f"The nearest lesser symbol was missing for this region, but the address should be no greater than {hex(self.max)}"
@@ -62,9 +62,7 @@ class GlobalSection:
         parent_section: str | None = None,
     ):
         self.name = name
-        self.parent_section = (
-            parent_section  # This is ONLY used for string display in the CLI, and has no functional purpose in the backend.
-        )
+        self.parent_section = parent_section  # This is ONLY used for string display in the CLI, and has no functional purpose in the backend.
         self.na_section = na_section
         self.eu_section = eu_section
         self.jp_section = jp_section
@@ -79,7 +77,7 @@ class GlobalSection:
     def map_offset_single_target(self, offset: int, src_region: Region, target_region: Region) -> MappingResult:
         """Given an offset, the region it came from, and the desired region to map to, creates a MappingResult."""
         if src_region == target_region:
-            return MappingResult(True, offset)
+            return MappingResult(offset)
         return _map_offset_using_maps(
             offset, self.section_by_region(src_region).input_map, self.section_by_region(target_region).output_map
         )
@@ -96,25 +94,27 @@ class GlobalSection:
 
     def __str__(self):
         return self.name
-        
+
     def cli_str(self) -> str:
         output = self.name.replace("ov", "overlay")
         if self.parent_section:
             output += f" (subsection of {self.parent_section})"
         return output
-        
-        
+
+
 # This reluctantly needs to exist for verify_offset in section_selection to work; it depends on in_range
 class Ov36RegionSection(RegionSection):
-    def __init__(self, start : int, end : int):
+    def __init__(self, start: int, end: int):
         self.start = start
         self.end = end
 
-        
+
 class Ov36Section(GlobalSection):
     def __init__(self, name: str):
         self.name = name
-        self.region_section = Ov36RegionSection(0x23A7080, 0x23A7080 + 0x38F80) # idk if defining the addresses here is a good idea but whatever
+        self.region_section = Ov36RegionSection(
+            0x23A7080, 0x23A7080 + 0x38F80
+        )  # idk if defining the addresses here is a good idea but whatever
         self.parent_section = None
 
     # idk if having these unused parameters if bad practice, but i just want the function to be able to run as if it were a GlobalSection.
@@ -125,9 +125,9 @@ class Ov36Section(GlobalSection):
     def map_offset_single_target(self, offset: int, src_region: Region, target_region: Region) -> MappingResult:
         return MappingResult(True, offset)
 
-    def section_by_region(self, region: Region)
+    def section_by_region(self, region: Region):
         return self.region_section
-    
+
 
 def _map_offset_using_maps(offset: int, input_map, output_map) -> MappingResult:
     lesser_input_map_offset = 0
@@ -137,7 +137,7 @@ def _map_offset_using_maps(offset: int, input_map, output_map) -> MappingResult:
         elif offset < input_map_offset:
             # This is our greater offset
             greater_input_map_offset = input_map_offset
-            break # ????? later chesyon here, what was i ON. TODO: check if this is correct/needed
+            break  # ????? later chesyon here, what was i ON. TODO: check if this is correct/needed
         else:
             # If our offset falls exactly on a symbol, skip doing any math and just get the exact symbol dst offset.
             return MappingResult(output_map[input_map[input_map_offset]])
@@ -146,10 +146,10 @@ def _map_offset_using_maps(offset: int, input_map, output_map) -> MappingResult:
     )  # How far apart are the nearest two symbols?
     # Get dst offsets of nearest symbols
     lesser_symbol = input_map[lesser_input_map_offset]
-    lesser_symbol_map_offset = output_map[lesser_symbol] if lesser_symbol in output_map else None
+    lesser_output_map_offset = output_map[lesser_symbol] if lesser_symbol in output_map else None
     greater_symbol = input_map[greater_input_map_offset]
-    greater_symbol_map_offset = output_map[greater_symbol] if greater_symbol in output_map else None
-    if (not lesser_input_map_offset) or (not greater_input_map_offset): # if either is None
+    greater_output_map_offset = output_map[greater_symbol] if greater_symbol in output_map else None
+    if (not lesser_input_map_offset) or (not greater_input_map_offset):  # if either is None
         return MappingResult(None, lesser_input_map_offset, greater_input_map_offset)
     nearest_dst_symbols_distance = (
         greater_output_map_offset - lesser_output_map_offset
@@ -175,66 +175,26 @@ Overlay6 = GlobalSection("ov6", RegionSection(na.overlay6), RegionSection(eu.ove
 Overlay7 = GlobalSection("ov7", RegionSection(na.overlay7), RegionSection(eu.overlay7), RegionSection(jp.overlay7))
 Overlay8 = GlobalSection("ov8", RegionSection(na.overlay8), RegionSection(eu.overlay8), RegionSection(jp.overlay8))
 Overlay9 = GlobalSection("ov9", RegionSection(na.overlay9), RegionSection(eu.overlay9), RegionSection(jp.overlay9))
-Overlay10 = GlobalSection(
-    "ov10", RegionSection(na.overlay10), RegionSection(eu.overlay10), RegionSection(jp.overlay10)
-)
-Overlay11 = GlobalSection(
-    "ov11", RegionSection(na.overlay11), RegionSection(eu.overlay11), RegionSection(jp.overlay11)
-)
-Overlay12 = GlobalSection(
-    "ov12", RegionSection(na.overlay12), RegionSection(eu.overlay12), RegionSection(jp.overlay12)
-)
-Overlay13 = GlobalSection(
-    "ov13", RegionSection(na.overlay13), RegionSection(eu.overlay13), RegionSection(jp.overlay13)
-)
-Overlay14 = GlobalSection(
-    "ov14", RegionSection(na.overlay14), RegionSection(eu.overlay14), RegionSection(jp.overlay14)
-)
-Overlay15 = GlobalSection(
-    "ov15", RegionSection(na.overlay15), RegionSection(eu.overlay15), RegionSection(jp.overlay15)
-)
-Overlay16 = GlobalSection(
-    "ov16", RegionSection(na.overlay16), RegionSection(eu.overlay16), RegionSection(jp.overlay16)
-)
-Overlay17 = GlobalSection(
-    "ov17", RegionSection(na.overlay17), RegionSection(eu.overlay17), RegionSection(jp.overlay17)
-)
-Overlay18 = GlobalSection(
-    "ov18", RegionSection(na.overlay18), RegionSection(eu.overlay18), RegionSection(jp.overlay18)
-)
-Overlay19 = GlobalSection(
-    "ov19", RegionSection(na.overlay19), RegionSection(eu.overlay19), RegionSection(jp.overlay19)
-)
-Overlay20 = GlobalSection(
-    "ov20", RegionSection(na.overlay20), RegionSection(eu.overlay20), RegionSection(jp.overlay20)
-)
-Overlay21 = GlobalSection(
-    "ov21", RegionSection(na.overlay21), RegionSection(eu.overlay21), RegionSection(jp.overlay21)
-)
-Overlay22 = GlobalSection(
-    "ov22", RegionSection(na.overlay22), RegionSection(eu.overlay22), RegionSection(jp.overlay22)
-)
-Overlay23 = GlobalSection(
-    "ov23", RegionSection(na.overlay23), RegionSection(eu.overlay23), RegionSection(jp.overlay23)
-)
-Overlay24 = GlobalSection(
-    "ov24", RegionSection(na.overlay24), RegionSection(eu.overlay24), RegionSection(jp.overlay24)
-)
-Overlay25 = GlobalSection(
-    "ov25", RegionSection(na.overlay25), RegionSection(eu.overlay25), RegionSection(jp.overlay25)
-)
-Overlay26 = GlobalSection(
-    "ov26", RegionSection(na.overlay26), RegionSection(eu.overlay26), RegionSection(jp.overlay26)
-)
-Overlay27 = GlobalSection(
-    "ov27", RegionSection(na.overlay27), RegionSection(eu.overlay27), RegionSection(jp.overlay27)
-)
-Overlay28 = GlobalSection(
-    "ov28", RegionSection(na.overlay28), RegionSection(eu.overlay28), RegionSection(jp.overlay28)
-)
-Overlay29 = GlobalSection(
-    "ov29", RegionSection(na.overlay29), RegionSection(eu.overlay29), RegionSection(jp.overlay29)
-)
+Overlay10 = GlobalSection("ov10", RegionSection(na.overlay10), RegionSection(eu.overlay10), RegionSection(jp.overlay10))
+Overlay11 = GlobalSection("ov11", RegionSection(na.overlay11), RegionSection(eu.overlay11), RegionSection(jp.overlay11))
+Overlay12 = GlobalSection("ov12", RegionSection(na.overlay12), RegionSection(eu.overlay12), RegionSection(jp.overlay12))
+Overlay13 = GlobalSection("ov13", RegionSection(na.overlay13), RegionSection(eu.overlay13), RegionSection(jp.overlay13))
+Overlay14 = GlobalSection("ov14", RegionSection(na.overlay14), RegionSection(eu.overlay14), RegionSection(jp.overlay14))
+Overlay15 = GlobalSection("ov15", RegionSection(na.overlay15), RegionSection(eu.overlay15), RegionSection(jp.overlay15))
+Overlay16 = GlobalSection("ov16", RegionSection(na.overlay16), RegionSection(eu.overlay16), RegionSection(jp.overlay16))
+Overlay17 = GlobalSection("ov17", RegionSection(na.overlay17), RegionSection(eu.overlay17), RegionSection(jp.overlay17))
+Overlay18 = GlobalSection("ov18", RegionSection(na.overlay18), RegionSection(eu.overlay18), RegionSection(jp.overlay18))
+Overlay19 = GlobalSection("ov19", RegionSection(na.overlay19), RegionSection(eu.overlay19), RegionSection(jp.overlay19))
+Overlay20 = GlobalSection("ov20", RegionSection(na.overlay20), RegionSection(eu.overlay20), RegionSection(jp.overlay20))
+Overlay21 = GlobalSection("ov21", RegionSection(na.overlay21), RegionSection(eu.overlay21), RegionSection(jp.overlay21))
+Overlay22 = GlobalSection("ov22", RegionSection(na.overlay22), RegionSection(eu.overlay22), RegionSection(jp.overlay22))
+Overlay23 = GlobalSection("ov23", RegionSection(na.overlay23), RegionSection(eu.overlay23), RegionSection(jp.overlay23))
+Overlay24 = GlobalSection("ov24", RegionSection(na.overlay24), RegionSection(eu.overlay24), RegionSection(jp.overlay24))
+Overlay25 = GlobalSection("ov25", RegionSection(na.overlay25), RegionSection(eu.overlay25), RegionSection(jp.overlay25))
+Overlay26 = GlobalSection("ov26", RegionSection(na.overlay26), RegionSection(eu.overlay26), RegionSection(jp.overlay26))
+Overlay27 = GlobalSection("ov27", RegionSection(na.overlay27), RegionSection(eu.overlay27), RegionSection(jp.overlay27))
+Overlay28 = GlobalSection("ov28", RegionSection(na.overlay28), RegionSection(eu.overlay28), RegionSection(jp.overlay28))
+Overlay29 = GlobalSection("ov29", RegionSection(na.overlay29), RegionSection(eu.overlay29), RegionSection(jp.overlay29))
 MoveEffects = GlobalSection(
     "moveeffects",
     RegionSection(na.move_effects),
@@ -242,22 +202,10 @@ MoveEffects = GlobalSection(
     RegionSection(jp.move_effects),
     "overlay29",
 )
-Overlay30 = GlobalSection(
-    "ov30", RegionSection(na.overlay30), RegionSection(eu.overlay30), RegionSection(jp.overlay30)
-)
-Overlay31 = GlobalSection(
-    "ov31", RegionSection(na.overlay31), RegionSection(eu.overlay31), RegionSection(jp.overlay31)
-)
-Overlay32 = GlobalSection(
-    "ov32", RegionSection(na.overlay32), RegionSection(eu.overlay32), RegionSection(jp.overlay32)
-)
-Overlay33 = GlobalSection(
-    "ov33", RegionSection(na.overlay33), RegionSection(eu.overlay33), RegionSection(jp.overlay33)
-)
-Overlay34 = GlobalSection(
-    "ov34", RegionSection(na.overlay34), RegionSection(eu.overlay34), RegionSection(jp.overlay34)
-)
-Overlay35 = GlobalSection(
-    "ov35", RegionSection(na.overlay35), RegionSection(eu.overlay35), RegionSection(jp.overlay35)
-)
+Overlay30 = GlobalSection("ov30", RegionSection(na.overlay30), RegionSection(eu.overlay30), RegionSection(jp.overlay30))
+Overlay31 = GlobalSection("ov31", RegionSection(na.overlay31), RegionSection(eu.overlay31), RegionSection(jp.overlay31))
+Overlay32 = GlobalSection("ov32", RegionSection(na.overlay32), RegionSection(eu.overlay32), RegionSection(jp.overlay32))
+Overlay33 = GlobalSection("ov33", RegionSection(na.overlay33), RegionSection(eu.overlay33), RegionSection(jp.overlay33))
+Overlay34 = GlobalSection("ov34", RegionSection(na.overlay34), RegionSection(eu.overlay34), RegionSection(jp.overlay34))
+Overlay35 = GlobalSection("ov35", RegionSection(na.overlay35), RegionSection(eu.overlay35), RegionSection(jp.overlay35))
 Overlay36 = Ov36Section("ov36")

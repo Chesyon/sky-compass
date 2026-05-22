@@ -2,9 +2,10 @@
 # The 'frontend' for sky-compass.
 
 import argparse
-from io import deserialized_io
-from section_selection import section_for_offset, Issue
+from compass_io import deserialized_io
+from section_selection import Issue
 from mapper import Region
+
 
 def region_name(region: Region) -> str:
     match region:
@@ -15,6 +16,7 @@ def region_name(region: Region) -> str:
         case Region.jp:
             return "JP"
 
+
 # TODO: This probably makes MappingResult.__str__ redundant. IO doesn't even return the MappingResult, it returns a dict, so we can't even *use* that function for the CLI anymore.
 def offset_result_string(result_dict) -> str:
     result = result_dict["result"]
@@ -23,22 +25,33 @@ def offset_result_string(result_dict) -> str:
     else:
         min = result_dict["min"]
         max = result_dict["max"]
-        if not min: # if min is None
+        if not min:  # if min is None
             if not max:
                 return "Both nearest symbols were missing for this region, so no information can be given"
-            return f"The nearest lesser symbol was missing for this region, but the address should be no greater than {hex(self.max)}"
+            return f"The nearest lesser symbol was missing for this region, but the address should be no greater than {hex(max)}"
         if not max:
-            return f"The nearest greater symbol was missing for this region, but the address should be no less than {hex(self.min)}"
-        return f"Could not find exact offset. Should be between {hex(self.min)} and {hex(self.max)}"
+            return f"The nearest greater symbol was missing for this region, but the address should be no less than {hex(min)}"
+        return f"Could not find exact offset. Should be between {hex(min)} and {hex(max)}"
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="sky-compass",
-        description="CLI util to convert RAM addresses between releases of PMD:EoS using pmdsky-debug symbols."
+        description="CLI util to convert RAM addresses between releases of PMD:EoS using pmdsky-debug symbols.",
     )
-    parser.add_argument("region", choices=['na', 'eu', 'jp'], type=lambda reg: "na" if reg.lower() == "us" else reg.lower(), help="Source region of address")
+    parser.add_argument(
+        "region",
+        choices=["na", "eu", "jp"],
+        type=lambda reg: "na" if reg.lower() == "us" else reg.lower(),
+        help="Source region of address",
+    )
     parser.add_argument("address", type=lambda addr: int(addr, 16), help="Address to be converted")
-    parser.add_argument("section", type=lambda sec: sec.lower().replace("overlay", "ov").replace("_",""), required=False, help="What overlay/section the address is in. If blank, sky-compass will try to figure it out on its own.") # TODO: add choices ([str(sec) for sec in sections]? this doesn't include sub-sections though)
+    parser.add_argument(
+        "section",
+        type=lambda sec: sec.lower().replace("overlay", "ov").replace("_", ""),
+        nargs="?",
+        help="What overlay/section the address is in. If blank, sky-compass will try to figure it out on its own.",
+    )  # TODO: add choices ([str(sec) for sec in sections]? this doesn't include sub-sections though)
     args = parser.parse_args()
     output = deserialized_io({"address": args.address, "region": args.region, "section": args.section}, True)
     sections = output["sections"]
@@ -74,8 +87,9 @@ def main() -> None:
     # Display output offsets.
     outputs = output["outputs"]
     print(
-        f"{hex(args.offset)} [{args.region.upper()}] in {sections[0]}:\nNA: {offset_result_string(outputs["na"])}\nEU: {offset_result_string(outputs["eu"])}\nJP: {offset_result_string(outputs["jp"])}"
+        f"{hex(args.address)} [{args.region.upper()}] in {sections[0]}:\nNA: {offset_result_string(outputs['na'])}\nEU: {offset_result_string(outputs['eu'])}\nJP: {offset_result_string(outputs['jp'])}"
     )
+
 
 if __name__ == "__main__":
     main()
