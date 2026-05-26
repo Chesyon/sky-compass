@@ -2,7 +2,7 @@
 # This file handles retrieving the relevant GlobalSection class for an offset.
 # If your usage of sky-compass only concerns a few sections (for example, if you KNOW all offsets you're going to be handling are for the script engine), you may wish to write an alternative to this file to save redundant checks.
 
-from mapper import (
+from sky_compass.mapper import (
     Region,
     GlobalSection,
     Arm7,

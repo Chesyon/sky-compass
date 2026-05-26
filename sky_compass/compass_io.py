@@ -2,8 +2,8 @@
 # This file is responsible for communicating between the "frontend" and "backend".
 
 import json
-from section_selection import section_for_offset, Issue
-from mapper import MappingResult, Region
+from sky_compass.section_selection import section_for_offset, Issue
+from sky_compass.mapper import MappingResult, Region
 
 # TODO: Consider making an enum for response in the same way as Issue.
 

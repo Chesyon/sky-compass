@@ -2,9 +2,9 @@
 # The 'frontend' for sky-compass.
 
 import argparse
-from compass_io import deserialized_io
-from section_selection import Issue
-from mapper import Region
+from sky_compass.compass_io import deserialized_io
+from sky_compass.section_selection import Issue
+from sky_compass.mapper import Region
 
 
 def region_name(region: Region) -> str:

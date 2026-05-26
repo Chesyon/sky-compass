@@ -18,6 +18,9 @@ dependencies = [
     "pmdsky-debug-py >= 10.0.0",
 ]
 
+[project.scripts]
+sky-compass = "sky_compass.cli:main"
+
 [project.urls]
 Repository = "https://github.com/Chesyon/sky-compass"
 Issues = "https://github.com/Chesyon/sky-compass/issues"
