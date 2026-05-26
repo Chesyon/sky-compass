@@ -48,6 +48,7 @@ from sky_compass.mapper import (
     Overlay35,
     Overlay36,
 )
+from sky_compass.types import CompassRequest, Issue
 from re import compile
 from enum import Enum
 
@@ -92,23 +93,16 @@ overlays = [
 ]
 sections = [Arm7, Arm9] + overlays
 
-Issue = Enum(
-    "Issue",
-    [
-        "VERIFICATION_FAILED",  # Offset was not in the specified location.
-        "INVALID_SECTION",  # Specified section does not exist.
-        "FINDING_AUTOMATICALLY",  # Finding section automatically.
-        "NO_VALID_SECTIONS",  # This offset doesn't fall within any valid section.
-        "MULTIPLE_VALID_SECTIONS",
-    ],
-)
+overlay_regex = compile("ov([0-3]?[0-9])$")
 
 
-def section_for_offset(offset: int, region: Region, name: str | None) -> tuple[list[GlobalSection] | None, list[Enum]]:
+def section_for_offset(request: CompassRequest) -> tuple[list[GlobalSection] | None, list[Issue]]:
     issues: list[Enum] = []
+    offset = request.address
+    region = request.region
+    name = request.section
     if name:
-        p = compile("ov([0-3]?[0-9])$") # TODO: this can probably be moved outside of the function. we don't need to be compiling this every time, do we?
-        m = p.match(name)
+        m = overlay_regex.match(name)
         if not m:  # NOT an overlay
             match name:
                 case "arm7":

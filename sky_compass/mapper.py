@@ -3,28 +3,7 @@
 
 from pmdsky_debug_py.protocol import Symbol
 from pmdsky_debug_py import na, eu, jp
-from enum import Enum
-
-Region = Enum("Region", ["na", "eu", "jp"])
-
-
-class MappingResult:
-    def __init__(self, result: int | None, min: None | int = None, max: None | int = None):
-        self.result = result
-        self.min = min
-        self.max = max
-
-    def __str__(self):
-        if self.result:  # if self.result is not None
-            return hex(self.result)
-        else:
-            if not self.min:  # if self.min is None
-                if not self.max:
-                    return "Both nearest symbols were missing for this region, so no information can be given"
-                return f"The nearest lesser symbol was missing for this region, but the address should be no greater than {hex(self.max)}"
-            if not self.max:
-                return f"The nearest greater symbol was missing for this region, but the address should be no less than {hex(self.min)}"
-            return f"Could not find exact offset. Should be between {hex(self.min)} and {hex(self.max)}"
+from sky_compass.types import Region, MappingResult
 
 
 class RegionSection:
@@ -69,15 +48,15 @@ class GlobalSection:
 
     def map_offset(self, offset: int, src_region: Region) -> tuple[MappingResult, MappingResult, MappingResult]:
         """Given an offset and its region, creates mappings for the other two regions. Returns three mapping results; NA, EU, and JP, in that order."""
-        na_result = self.map_offset_single_target(offset, src_region, Region.na)
-        eu_result = self.map_offset_single_target(offset, src_region, Region.eu)
-        jp_result = self.map_offset_single_target(offset, src_region, Region.jp)
+        na_result = self.map_offset_single_target(offset, src_region, Region.REGION_NA)
+        eu_result = self.map_offset_single_target(offset, src_region, Region.REGION_EU)
+        jp_result = self.map_offset_single_target(offset, src_region, Region.REGION_JP)
         return na_result, eu_result, jp_result
 
     def map_offset_single_target(self, offset: int, src_region: Region, target_region: Region) -> MappingResult:
         """Given an offset, the region it came from, and the desired region to map to, creates a MappingResult."""
         if src_region == target_region:
-            return MappingResult(offset)
+            return MappingResult(result=offset, minimum=None, maximum=None)
         return _map_offset_using_maps(
             offset, self.section_by_region(src_region).input_map, self.section_by_region(target_region).output_map
         )
@@ -85,11 +64,11 @@ class GlobalSection:
     def section_by_region(self, region: Region) -> RegionSection:
         """Returns a RegionSection for the GlobalSection, depending on which region is requested."""
         match region:
-            case Region.na:
+            case Region.REGION_NA:
                 return self.na_section
-            case Region.eu:
+            case Region.REGION_EU:
                 return self.eu_section
-            case Region.jp:
+            case Region.REGION_JP:
                 return self.jp_section
 
     def __str__(self):
@@ -119,11 +98,11 @@ class Ov36Section(GlobalSection):
 
     # idk if having these unused parameters if bad practice, but i just want the function to be able to run as if it were a GlobalSection.
     def map_offset(self, offset: int, src_region: Region) -> tuple[MappingResult, MappingResult, MappingResult]:
-        output = MappingResult(True, offset)
+        output = MappingResult(result=offset, minimum=None, maximum=None)
         return output, output, output
 
     def map_offset_single_target(self, offset: int, src_region: Region, target_region: Region) -> MappingResult:
-        return MappingResult(True, offset)
+        return MappingResult(result=offset, minimum=None, maximum=None)
 
     def section_by_region(self, region: Region):
         return self.region_section
@@ -135,12 +114,11 @@ def _map_offset_using_maps(offset: int, input_map, output_map) -> MappingResult:
         if offset > input_map_offset:
             lesser_input_map_offset = input_map_offset
         elif offset < input_map_offset:
-            # This is our greater offset
             greater_input_map_offset = input_map_offset
-            break  # ????? later chesyon here, what was i ON. TODO: check if this is correct/needed
+            break  # Greater offset has been found so we're done looping
         else:
             # If our offset falls exactly on a symbol, skip doing any math and just get the exact symbol dst offset.
-            return MappingResult(output_map[input_map[input_map_offset]])
+            return MappingResult(result=output_map[input_map[input_map_offset]], minimum=None, maximum=None)
     nearest_src_symbols_distance = (
         greater_input_map_offset - lesser_input_map_offset
     )  # How far apart are the nearest two symbols?
@@ -150,15 +128,15 @@ def _map_offset_using_maps(offset: int, input_map, output_map) -> MappingResult:
     greater_symbol = input_map[greater_input_map_offset]
     greater_output_map_offset = output_map[greater_symbol] if greater_symbol in output_map else None
     if (not lesser_input_map_offset) or (not greater_input_map_offset):  # if either is None
-        return MappingResult(None, lesser_input_map_offset, greater_input_map_offset)
+        return MappingResult(result=None, minimum=lesser_input_map_offset, maximum=greater_input_map_offset)
     nearest_dst_symbols_distance = (
         greater_output_map_offset - lesser_output_map_offset
     )  # How far apart are the dst equivalents of the nearest two symbols?
     if nearest_src_symbols_distance != nearest_dst_symbols_distance:
         # Offset {hex(src_offset)} is not mappable, distance between nearest symbols ({input_map[lesser_input_map_offset]} and {input_map[greater_input_map_offset]}) differs between src ({hex(nearest_src_symbols_distance)}) and dst ({hex(nearest_dst_symbols_distance)})
-        return MappingResult(None, lesser_output_map_offset, greater_output_map_offset)
+        return MappingResult(result=None, minimum=lesser_output_map_offset, maximum=greater_output_map_offset)
     # Symbols are the same distance apart in dst and src
-    return MappingResult(offset - lesser_input_map_offset + lesser_output_map_offset)
+    return MappingResult(result=offset - lesser_input_map_offset + lesser_output_map_offset, minimum=None, maximum=None)
 
 
 Arm7 = GlobalSection("arm7", RegionSection(na.arm7), RegionSection(eu.arm7), RegionSection(jp.arm7))
