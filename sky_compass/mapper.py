@@ -1,13 +1,13 @@
 # Copyright 2025-2026 Chesyon, under the MIT license
 # This file defines all the various RAM sections that are defined in pmdsky-debug, and provides the functions needed to map an offset within a section.
 
-from pmdsky_debug_py.protocol import Symbol
+from pmdsky_debug_py.protocol import Symbol, SectionProtocol
 from pmdsky_debug_py import na, eu, jp
 from sky_compass.types import Region, MappingResult
 
 
 class RegionSection:
-    def __init__(self, section):
+    def __init__(self, section: SectionProtocol):
         self.start = section.loadaddress
         self.length = section.length
         self.end = self.start + self.length
