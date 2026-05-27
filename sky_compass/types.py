@@ -9,16 +9,12 @@ class Region(str, Enum):
     REGION_JP = "jp"
 
 
-Issue = Enum(
-    "Issue",
-    [
-        "VERIFICATION_FAILED",  # Offset was not in the specified location.
-        "INVALID_SECTION",  # Specified section does not exist.
-        "FINDING_AUTOMATICALLY",  # Finding section automatically.
-        "NO_VALID_SECTIONS",  # This offset doesn't fall within any valid section.
-        "MULTIPLE_VALID_SECTIONS",
-    ],
-)
+class Issue(str, Enum):
+    ISSUE_VERIFICATION_FAILED = "VERIFICATION_FAILED"
+    ISSUE_INVALID_SECTION = "INVALID_SECTION"
+    ISSUE_FINDING_AUTOMATICALLY = "FINDING_AUTOMATICALLY"
+    ISSUE_NO_VALID_SECTIONS = "NO_VALID_SECTIONS"
+    ISSUE_MULTIPLE_VALID_SECTIONS = "MULTIPLE_VALID_SECTIONS"
 
 
 class MappingResult(BaseModel):

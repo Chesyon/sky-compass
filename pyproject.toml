@@ -19,12 +19,18 @@ dependencies = [
     "pydantic >= 2.13.0"
 ]
 
+[project.optional-dependencies]
+api = ["fastapi>=0.136.0"]
+
 [project.scripts]
 sky-compass = "sky_compass.cli:main"
 
 [project.urls]
 Repository = "https://github.com/Chesyon/sky-compass"
 Issues = "https://github.com/Chesyon/sky-compass/issues"
+
+[tool.fastapi]
+entrypoint = "sky_compass.api:app"
 
 [tool.ruff]
 line-length = 120

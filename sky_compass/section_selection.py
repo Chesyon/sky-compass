@@ -109,33 +109,33 @@ def section_for_offset(request: CompassRequest) -> tuple[list[GlobalSection] | N
                     if verify_offset(offset, region, Arm7):
                         return [Arm7], issues
                     else:
-                        issues.append(Issue.VERIFICATION_FAILED)
+                        issues.append(Issue.ISSUE_VERIFICATION_FAILED)
                 case "arm9":
                     if verify_offset(offset, region, Arm9):
                         return [check_for_arm9_subsection(offset, region)], issues
                     else:
-                        issues.append(Issue.VERIFICATION_FAILED)
+                        issues.append(Issue.ISSUE_VERIFICATION_FAILED)
                 case "libs":
                     if verify_offset(offset, region, Libs):
                         return [Libs], issues
                     else:
-                        issues.append(Issue.VERIFICATION_FAILED)
+                        issues.append(Issue.ISSUE_VERIFICATION_FAILED)
                 case "itcm":
                     if verify_offset(offset, region, Itcm):
                         return [Itcm], issues
                     else:
-                        issues.append(Issue.VERIFICATION_FAILED)
+                        issues.append(Issue.ISSUE_VERIFICATION_FAILED)
                 case "moveeffects":
                     if verify_offset(offset, region, MoveEffects):
                         return [MoveEffects], issues
                     else:
-                        issues.append(Issue.VERIFICATION_FAILED)
+                        issues.append(Issue.ISSUE_VERIFICATION_FAILED)
                 case _:
-                    issues.append(Issue.INVALID_SECTION)
+                    issues.append(Issue.ISSUE_INVALID_SECTION)
         else:
             overlay_num = int(m.group(1))
             if overlay_num > 36:
-                issues.append(Issue.INVALID_SECTION)
+                issues.append(Issue.ISSUE_INVALID_SECTION)
             else:  # User described an overlay that exists. Is the offset in it?
                 overlay = overlays[overlay_num]
                 if verify_offset(offset, region, overlay):
@@ -143,9 +143,9 @@ def section_for_offset(request: CompassRequest) -> tuple[list[GlobalSection] | N
                         return [check_for_ov29_subsection(offset, region)], issues
                     return [overlay], issues  # Overlay verified! We're done!
                 else:
-                    issues.append(Issue.VERIFICATION_FAILED)
+                    issues.append(Issue.ISSUE_VERIFICATION_FAILED)
     # User either did not provide a name, name was invalid, or offset wasn't in the specified region. Find it ourselves!
-    issues.append(Issue.FINDING_AUTOMATICALLY)
+    issues.append(Issue.ISSUE_FINDING_AUTOMATICALLY)
     potential_sections: list[GlobalSection] = []
     for section in sections:
         if verify_offset(offset, region, section):
@@ -156,9 +156,9 @@ def section_for_offset(request: CompassRequest) -> tuple[list[GlobalSection] | N
             else:
                 potential_sections.append(section)
     if len(potential_sections) < 1:
-        issues.append(Issue.NO_VALID_SECTIONS)
+        issues.append(Issue.ISSUE_NO_VALID_SECTIONS)
     elif len(potential_sections) > 1:
-        issues.append(Issue.MULTIPLE_VALID_SECTIONS)
+        issues.append(Issue.ISSUE_MULTIPLE_VALID_SECTIONS)
     return potential_sections, issues
 
 

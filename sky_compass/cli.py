@@ -46,15 +46,15 @@ def main() -> None:
     # TODO: MAYBE add a cli_str function to the Issue class, have the error messages defined there. MULTIPLE_VALID_SECTIONS will probably still need to have some special behavior though.
     for issue in output.issues:
         match issue:
-            case Issue.VERIFICATION_FAILED:
+            case Issue.ISSUE_VERIFICATION_FAILED:
                 print("Offset isn't in the provided section.")
-            case Issue.INVALID_SECTION:
+            case Issue.ISSUE_INVALID_SECTION:
                 print("Provided section does not exist.")
-            case Issue.FINDING_AUTOMATICALLY:
+            case Issue.ISSUE_FINDING_AUTOMATICALLY:
                 print("Finding section automatically...")
-            case Issue.NO_VALID_SECTIONS:
+            case Issue.ISSUE_NO_VALID_SECTIONS:
                 print("Offset was not found in any possible section.")
-            case Issue.MULTIPLE_VALID_SECTIONS:
+            case Issue.ISSUE_MULTIPLE_VALID_SECTIONS:
                 num_sections = len(output.sections)
                 possible_sections_str = f"{num_sections} sections contain this offset: "
                 for i in range(num_sections):
