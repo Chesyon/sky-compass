@@ -48,7 +48,7 @@ from sky_compass.mapper import (
     Overlay35,
     Overlay36,
 )
-from sky_compass.types import CompassRequest, Issue
+from sky_compass.compass_types import CompassRequest, Issue
 from re import compile
 from enum import Enum
 

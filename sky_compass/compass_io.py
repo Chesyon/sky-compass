@@ -2,7 +2,7 @@
 # This file is responsible for communicating between the "frontend" and "backend".
 
 from sky_compass.section_selection import section_for_offset
-from sky_compass.types import CompassRequest, CompassResponse
+from sky_compass.compass_types import CompassRequest, CompassResponse
 
 
 def deserialized_io(request: CompassRequest) -> CompassResponse:

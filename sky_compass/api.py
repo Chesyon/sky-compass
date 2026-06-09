@@ -1,4 +1,4 @@
-from sky_compass.types import CompassRequest, CompassResponse
+from sky_compass.compass_types import CompassRequest, CompassResponse
 from sky_compass.compass_io import deserialized_io
 
 try:

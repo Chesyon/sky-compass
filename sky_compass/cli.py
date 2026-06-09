@@ -4,13 +4,13 @@
 import argparse
 from sky_compass.compass_io import deserialized_io
 from sky_compass.section_selection import Issue
-from sky_compass.types import CompassRequest, MappingResult
+from sky_compass.compass_types import CompassRequest, MappingResult
 
 
 def offset_result_string(result: MappingResult) -> str:
-    result = result.result
-    if result:
-        return hex(result)
+    result_addr = result.result
+    if result_addr:
+        return hex(result_addr)
     else:
         minimum = result.minimum
         maximum = result.maximum
@@ -60,7 +60,7 @@ def main() -> None:
                 for i in range(num_sections):
                     if i == num_sections - 1:
                         possible_sections_str += "and "
-                    possible_sections_str += output.sections[i].cli_str()
+                    possible_sections_str += output.sections[i]
                     if i != num_sections - 1:
                         possible_sections_str += ", "
                     else:

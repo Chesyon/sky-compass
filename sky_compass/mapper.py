@@ -3,7 +3,7 @@
 
 from pmdsky_debug_py.protocol import Symbol, SectionProtocol
 from pmdsky_debug_py import na, eu, jp
-from sky_compass.types import Region, MappingResult
+from sky_compass.compass_types import Region, MappingResult
 
 
 class RegionSection:
