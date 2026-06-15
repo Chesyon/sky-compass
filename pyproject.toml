@@ -1,6 +1,6 @@
 [build-system]
-requires = ["flit_core >=3.11,<5"]
-build-backend = "flit_core.buildapi"
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "sky-compass"
@@ -12,6 +12,9 @@ description = "CLI utility to convert RAM addresses between releases of PMD:EoS"
 readme = "README.md"
 requires-python = ">=3.10"
 keywords = ["rom-hacking", "game-modding"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+]
 license = "MIT"
 license-files = ["LICENSE"]
 dependencies = [
